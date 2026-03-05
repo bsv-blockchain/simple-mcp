@@ -4,25 +4,14 @@ An MCP (Model Context Protocol) server that provides AI agents with knowledge an
 
 ## Quick Start
 
-### Claude Code (local)
+### Claude Code (recommended)
 ```bash
-cd simple-mcp
-npm install && npm run build
+claude mcp add simple-mcp -- npx -y @bsv/simple-mcp
 ```
 
-Add to `~/.claude/settings.json`:
-```json
-{
-  "mcpServers": {
-    "simple": {
-      "command": "node",
-      "args": ["/path/to/simple-mcp/dist/index.js"]
-    }
-  }
-}
-```
+That's it — Claude will automatically download and run the MCP server via npx.
 
-### Docker
+### Docker (alternative)
 ```bash
 docker build -t simple-mcp .
 ```
