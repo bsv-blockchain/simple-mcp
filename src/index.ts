@@ -120,7 +120,7 @@ server.tool(
   'generate_payment_handler',
   'Generate payment handler function',
   {
-    type: z.enum(['simple', 'multi-output', 'server-funding']).describe('Payment type'),
+    type: z.enum(['simple', 'multi-output', 'server-funding', 'direct-payment', 'receive-payment']).describe('Payment type: simple (P2P via MessageBox), multi-output, server-funding (legacy), direct-payment (BRC-29 send), receive-payment (BRC-29 internalize)'),
     basket: z.string().optional().describe('Basket name for tracking payments')
   },
   async ({ type, basket }) => ({

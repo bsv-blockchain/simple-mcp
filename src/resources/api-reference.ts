@@ -38,7 +38,40 @@ const wallet = await ServerWallet.create({
 ### Payments
 - \`pay(options: PaymentOptions): Promise<TransactionResult>\` — Payment via MessageBox P2P (PeerPayClient)
 - \`send(options: SendOptions): Promise<SendResult>\` — Multi-output: combine P2PKH + OP_RETURN + PushDrop in one tx
-- \`fundServerWallet(request: PaymentRequest, basket?: string): Promise<TransactionResult>\` — Fund a ServerWallet using BRC-29 derivation
+- \`fundServerWallet(request: PaymentRequest, basket?: string): Promise<TransactionResult>\` — Fund a ServerWallet using BRC-29 derivation (legacy — prefer sendDirectPayment)
+
+### Direct Payments (BRC-29 wallet payment internalization)
+- \`createPaymentRequest(options: { satoshis: number, memo?: string }): PaymentRequest\` — Generate BRC-29 derivation data. Share with the sender so they can pay you.
+- \`sendDirectPayment(request: PaymentRequest): Promise<DirectPaymentResult>\` — Create a BRC-29 derived P2PKH transaction. Returns tx + remittance data for the recipient.
+- \`receiveDirectPayment(payment: IncomingPayment): Promise<void>\` — Internalize a payment directly into wallet balance using \`wallet payment\` protocol (NOT into a basket).
+
+\`\`\`typescript
+// DirectPaymentResult — returned by sendDirectPayment
+interface DirectPaymentResult extends TransactionResult {
+  senderIdentityKey: string
+  derivationPrefix: string
+  derivationSuffix: string
+  outputIndex: number
+}
+\`\`\`
+
+**Flow: Wallet A pays Wallet B directly**
+\`\`\`typescript
+// 1. Wallet B creates payment request
+const request = walletB.createPaymentRequest({ satoshis: 2000 })
+
+// 2. Wallet A creates the transaction
+const payment = await walletA.sendDirectPayment(request)
+
+// 3. Wallet B internalizes (funds go into spendable balance, not a basket)
+await walletB.receiveDirectPayment({
+  tx: payment.tx,
+  senderIdentityKey: payment.senderIdentityKey,
+  derivationPrefix: payment.derivationPrefix,
+  derivationSuffix: payment.derivationSuffix,
+  outputIndex: payment.outputIndex
+})
+\`\`\`
 
 ### PaymentOptions
 \`\`\`typescript
@@ -70,8 +103,9 @@ interface SendOutputSpec {
 \`\`\`
 
 ## ServerWallet-specific Methods
-- \`createPaymentRequest(options: { satoshis: number, memo?: string }): PaymentRequest\` — Generate BRC-29 payment request
-- \`receivePayment(payment: IncomingPayment): Promise<void>\` — Internalize payment using wallet payment protocol
+- \`receivePayment(payment: IncomingPayment): Promise<void>\` — **Deprecated.** Use \`receiveDirectPayment()\` instead. Kept for backward compat with \`server_funding\` label.
+
+**Note:** \`createPaymentRequest()\` and \`receiveDirectPayment()\` are now on WalletCore (both browser + server). ServerWallet inherits them.
 
 ## Result Types
 \`\`\`typescript
@@ -213,9 +247,9 @@ Returns: \`{ txid, amount, recipient }\`
 List payments in the \`payment_inbox\` MessageBox.
 
 ### acceptIncomingPayment(payment: any, basket?: string): Promise<any>
-Accept a payment. If \`basket\` is provided, uses \`basket insertion\` protocol (recommended). Otherwise uses \`PeerPayClient.acceptPayment()\`.
-
-**IMPORTANT:** When not using a basket, PeerPayClient.acceptPayment() swallows errors. The library checks \`typeof result === 'string'\` and throws.
+Accept a payment.
+- **With basket:** Uses \`basket insertion\` protocol — output goes into named basket.
+- **Without basket:** Uses \`wallet payment\` protocol — output goes directly into wallet's spendable balance (internalized like a direct payment).
 
 ## Identity Registry
 
