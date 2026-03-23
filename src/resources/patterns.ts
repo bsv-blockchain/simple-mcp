@@ -112,22 +112,53 @@ for (const payment of incoming) {
 }
 \`\`\`
 
-## Pattern 8: Server Wallet Funding Flow
+## Pattern 8: Direct Payment (BRC-29 Wallet Payment Internalization)
 \`\`\`typescript
-// Server side: 3-line handler (app/api/server-wallet/route.ts)
-// import { createServerWalletHandler } from '@bsv/simple/server'
-// const handler = createServerWalletHandler()
-// export const GET = handler.GET, POST = handler.POST
+// Direct payments internalize funds into the wallet's spendable balance
+// using 'wallet payment' protocol. Works on both Browser and Server wallets.
 
-// Client side:
-// 1. Get payment request from server
+// --- SENDING SIDE ---
+// 1. Get payment request from recipient
+const res = await fetch('/api/payment-request?satoshis=2000')
+const request = await res.json()  // PaymentRequest
+
+// 2. Create BRC-29 derived P2PKH transaction
+const payment = await wallet.sendDirectPayment(request)
+
+// 3. Send tx + remittance to recipient for internalization
+await fetch('/api/receive-payment', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    tx: Array.from(payment.tx),
+    senderIdentityKey: payment.senderIdentityKey,
+    derivationPrefix: payment.derivationPrefix,
+    derivationSuffix: payment.derivationSuffix,
+    outputIndex: payment.outputIndex
+  })
+})
+
+// --- RECEIVING SIDE ---
+// 1. Create payment request
+const request = wallet.createPaymentRequest({ satoshis: 100 })
+// Send request to payer...
+
+// 2. After payer creates tx, internalize it
+await wallet.receiveDirectPayment({
+  tx: paymentData.tx,
+  senderIdentityKey: paymentData.senderIdentityKey,
+  derivationPrefix: paymentData.derivationPrefix,
+  derivationSuffix: paymentData.derivationSuffix,
+  outputIndex: paymentData.outputIndex
+})
+\`\`\`
+
+## Pattern 8b: Server Wallet Funding (Legacy)
+\`\`\`typescript
+// Legacy pattern using fundServerWallet — prefer sendDirectPayment instead.
 const res = await fetch('/api/server-wallet?action=request')
 const { paymentRequest } = await res.json()
-
-// 2. Fund server wallet
 const result = await wallet.fundServerWallet(paymentRequest, 'server-funding')
-
-// 3. Send tx to server
 await fetch('/api/server-wallet?action=receive', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },

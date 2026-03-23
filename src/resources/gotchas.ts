@@ -41,6 +41,29 @@ await client.internalizeAction({
 // WRONG: both on same output — will fail
 \`\`\`
 
+## 1b. acceptIncomingPayment() now uses wallet payment when no basket
+
+When calling \`wallet.acceptIncomingPayment(payment)\` without a basket argument, the library now uses \`wallet payment\` internalization (funds go directly into wallet balance) instead of the old PeerPayClient fallback. With a basket, it still uses \`basket insertion\`.
+
+\`\`\`typescript
+// Into basket (basket insertion):
+await wallet.acceptIncomingPayment(payment, 'my-basket')
+
+// Into wallet balance (wallet payment):
+await wallet.acceptIncomingPayment(payment)
+\`\`\`
+
+## 1c. createPaymentRequest() and receiveDirectPayment() are on WalletCore
+
+Both browser and server wallets can now generate payment requests and internalize payments directly:
+
+\`\`\`typescript
+// Browser wallet can now receive direct payments:
+const request = wallet.createPaymentRequest({ satoshis: 1000 })
+// ... share request, get back tx data ...
+await wallet.receiveDirectPayment(paymentData)
+\`\`\`
+
 ## 2. PeerPayClient.acceptPayment() swallows errors
 
 Returns the string \`'Unable to receive payment!'\` instead of throwing an error.
