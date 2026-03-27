@@ -76,6 +76,10 @@ async function main() {
   console.log('Connected:', wallet.getIdentityKey())
   console.log('Address:', wallet.getAddress())
   console.log('Status:', wallet.getStatus())
+
+  // Check balance
+  const balance = await wallet.getBalance()
+  console.log('Balance:', balance.totalSatoshis, 'sats')
 }
 
 main().catch(console.error)
@@ -101,7 +105,7 @@ Handles lazy-init singleton, key persistence, and all actions automatically.
 **API endpoints:**
 - \`GET ?action=create\` → server identity key + status
 - \`GET ?action=request&satoshis=1000\` → BRC-29 payment request
-- \`GET ?action=balance\` → output count + total satoshis
+- \`GET ?action=balance&basket=...\` → BalanceResult (uses \`getBalance()\` — optimized specOp when no basket)
 - \`POST ?action=receive\` body: \`{ tx, senderIdentityKey, derivationPrefix, derivationSuffix, outputIndex }\`
 
 No \`@bsv/sdk\` import needed. Add \`.server-wallet.json\` to \`.gitignore\`.`

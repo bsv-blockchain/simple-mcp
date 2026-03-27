@@ -1,6 +1,6 @@
 {
   "name": "@bsv/simple-mcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "MCP server for @bsv/simple — AI-assisted BSV blockchain development",
   "main": "dist/index.js",
   "bin": {

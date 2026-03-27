@@ -30,6 +30,30 @@ const wallet = await ServerWallet.create({
 - \`getStatus(): WalletStatus\` — { isConnected, identityKey, network }
 - \`getWalletInfo(): WalletInfo\` — { identityKey, address, network, isConnected }
 - \`getClient(): WalletInterface\` — Underlying SDK wallet client
+- \`getBalance(basket?: string): Promise<BalanceResult>\` — Wallet balance (optimized via specOp when no basket, per-basket when specified)
+
+### Balance
+\`\`\`typescript
+interface BalanceResult {
+  totalSatoshis: number      // sum of all output satoshis
+  totalOutputs: number       // count of outputs (0 when using default specOp mode)
+  spendableSatoshis: number  // sum of spendable output satoshis
+  spendableOutputs: number   // count of spendable outputs (0 when using default specOp mode)
+}
+\`\`\`
+
+- **Without basket:** Uses wallet-toolbox \`specOpWalletBalance\` for an optimized query — balance computed at the storage layer. \`totalOutputs\`/\`spendableOutputs\` are 0.
+- **With basket:** Iterates outputs from \`listOutputs({ basket })\` to compute totals and separate spendable vs non-spendable.
+
+\`\`\`typescript
+// Overall wallet balance
+const balance = await wallet.getBalance()
+console.log(balance.totalSatoshis)  // total spendable sats
+
+// Per-basket balance
+const tokenBalance = await wallet.getBalance('tokens')
+console.log(tokenBalance.spendableSatoshis, tokenBalance.spendableOutputs)
+\`\`\`
 
 ### Key Derivation
 - \`derivePublicKey(protocolID: [SecurityLevel, string], keyID: string, counterparty?: string, forSelf?: boolean): Promise<string>\` — Derive public key for any protocol
@@ -112,6 +136,7 @@ interface SendOutputSpec {
 interface TransactionResult { txid: string; tx: any; outputs?: OutputInfo[] }
 interface SendResult extends TransactionResult { outputDetails: SendOutputDetail[] }
 interface SendOutputDetail { index: number; type: 'p2pkh' | 'op_return' | 'pushdrop'; satoshis: number; description: string }
+interface BalanceResult { totalSatoshis: number; totalOutputs: number; spendableSatoshis: number; spendableOutputs: number }
 \`\`\`
 `
 

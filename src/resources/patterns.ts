@@ -34,6 +34,18 @@ export default function Page() {
 }
 \`\`\`
 
+## Pattern 1b: Check Wallet Balance
+\`\`\`typescript
+// Overall wallet balance (optimized — no output iteration)
+const balance = await wallet.getBalance()
+console.log(\`Wallet balance: \${balance.totalSatoshis} sats\`)
+
+// Per-basket balance (iterates outputs, shows spendable vs total)
+const tokenBalance = await wallet.getBalance('tokens')
+console.log(\`Tokens: \${tokenBalance.spendableOutputs} spendable (\${tokenBalance.spendableSatoshis} sats)\`)
+console.log(\`Total: \${tokenBalance.totalOutputs} outputs (\${tokenBalance.totalSatoshis} sats)\`)
+\`\`\`
+
 ## Pattern 2: Simple Payment via MessageBox P2P
 \`\`\`typescript
 const result = await wallet.pay({
