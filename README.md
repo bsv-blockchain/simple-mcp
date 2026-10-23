@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server that provides AI agents with knowledge and code generation tools for building BSV blockchain applications using `@bsv/simple`.
 
+Use a patched supported Node.js release:22.23.4,24.22.1 or26.12.1, or a later patch in those supported lines. See the [Node.js advisory](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+
 ## Quick Start
 
 ### Claude Code (recommended)
