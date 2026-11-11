@@ -7,6 +7,8 @@
     "simple-mcp": "dist/index.js"
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "dist"
   ],
   "scripts": {
@@ -24,7 +26,7 @@
     "claude",
     "bitcoin"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bsv-blockchain/simple-mcp.git"
